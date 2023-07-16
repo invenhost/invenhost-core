@@ -17,6 +17,7 @@ Enable the plugin in the plugin settings. You need to be signed in as a superuse
 
 ## License
 This project is provided as part of InvenHost services. It follows the same license as the main InvenHost project. All rights are reserved.
+(c) Copyright 2023 Matthias Mair, all rights reserved.
 
 ## Contributing
-This project ist not open for contributions. If you want to contribute, please contact us on code@mjmair.com or info@invenhost.com
+This project is not open for contributions. If you want to contribute, please contact me on code@mjmair.com.

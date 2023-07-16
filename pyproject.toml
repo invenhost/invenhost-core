@@ -1,4 +1,4 @@
-
+# Copyright (c) 2023 Matthias Mair<code@mjmair.com>
 [build-system]
 requires = ["setuptools", "wheel", "pyyaml"]
 build-backend = "setuptools.build_meta"
@@ -8,7 +8,7 @@ name = "invenhost-core"
 version =  "0.1.0"
 description="InvenHost integration plugin"
 readme = "README.md"
-license = {text = "Not open source"}
+license = {text = "UNLICENSED"}
 keywords = ["inventree", "inventree-plugin", "invenhost-core"]
 authors = [
     {name = "Matthias Mair", email =  "code@mjmair.com"}
