@@ -31,8 +31,8 @@ dependencies = ['django', ]
 dev = ['twine', 'setuptools']
 
 [project.urls]
-"Repository" = "https://github.com/matmair/invenhost-core"
-"Bug Tracker" = "https://github.com/matmair/invenhost-core/issues"
+"Repository" = "https://github.com/invenhost/invenhost-core"
+"Bug Tracker" = "https://github.com/invenhost/invenhost-core/issues"
 
 [project.entry-points."inventree_plugins"]
 invenhost-core = "invenhost_core:InvenHostCore"
