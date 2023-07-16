@@ -35,7 +35,7 @@ dev = ['twine', 'setuptools']
 "Bug Tracker" = "https://github.com/matmair/invenhost-core/issues"
 
 [project.entry-points."inventree_plugins"]
-invenhost-core = "invenhost-core:InvenHostCore"
+invenhost-core = "invenhost_core:InvenHostCore"
 
 [tool.setuptools.packages.find]
 where = ["src"]
