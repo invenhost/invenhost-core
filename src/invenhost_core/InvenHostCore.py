@@ -10,6 +10,7 @@ from django.conf.urls import url
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from InvenTree.config import get_plugin_file
 from plugin import InvenTreePlugin, registry
 from plugin.mixins import EventMixin, SettingsMixin, UrlsMixin
 
@@ -30,6 +31,7 @@ def set_license_setting(setting):
     if setting is not None and setting.value is not None:
         key = setting.value
         check_license_online(key, setting.plugin.set_metadata)
+        setting.plugin.check_pugins_file(key)
 
 
 def check_license_online(key, set_fnc):
@@ -89,7 +91,9 @@ class InvenHostCore(EventMixin, UrlsMixin, SettingsMixin, InvenTreePlugin):
     def process_event(self, event, *args, **kwargs):
         """Process received events."""
         if event == 'plugins_loaded':
-            check_license_online(self.get_setting('LICENSE'), self.db.set_metadata)
+            key = self.get_setting('LICENSE')
+            check_license_online(key, self.db.set_metadata)
+            self.check_pugins_file(key)
 
     def license_key_valid(self):
         """Return if the license key is valid."""
@@ -102,11 +106,27 @@ class InvenHostCore(EventMixin, UrlsMixin, SettingsMixin, InvenTreePlugin):
             return json.loads(data)
         return None
 
+    def check_pugins_file(self, key):
+        """Check if the source is set correctly in the plugin file."""
+        if ready():
+            logger.info(('License file check started'))
+            # Create license file
+            lic_url = f'https://license:{key}@get.keygen.sh/mjmair-com/stable/'
+            source = get_plugin_file()
+            plugin_text = source.read_text()
+            if lic_url not in plugin_text:
+                plugin_text += f'\n--extra-index-url {lic_url}\n'
+                source.write_text(plugin_text)
+                logger.info(('License file appended'))
+            logger.info(('License file check done'))
+
     def view_check(self, request, pk=None, led=None, context=None):
         """Register an LED."""
         if not superuser_check(request.user):
             raise PermissionError("Only superusers can register an instance.")
-        check_license_online(self.get_setting('LICENSE'), self.db.set_metadata)
+        key = self.get_setting('LICENSE')
+        check_license_online(key, self.db.set_metadata)
+        self.check_pugins_file(key)
         return redirect(self.settings_url)
 
     def setup_urls(self):
