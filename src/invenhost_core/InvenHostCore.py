@@ -24,6 +24,7 @@ def superuser_check(user):
     return user.is_superuser
 
 
+# region licensing
 def set_license_setting(setting):
     """Check licensing key setting."""
     if setting is not None and setting.value is not None:
@@ -60,6 +61,7 @@ def core_is_active():
 def ready():
     """Return if the core is ready."""
     return core_is_active()
+# endregion
 
 
 class InvenHostCore(EventMixin, UrlsMixin, SettingsMixin, InvenTreePlugin):
