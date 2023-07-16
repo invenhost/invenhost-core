@@ -16,7 +16,9 @@ Enable the plugin in the plugin settings. You need to be signed in as a superuse
 // # TODO add configuration instructions
 
 ## License
-This project is provided as part of InvenHost services. It follows the same license as the main InvenHost project. All rights are reserved.
+This project is provided as part of InvenHost services. It follows the same license as the main InvenHost project.
+
+
 (c) Copyright 2023 Matthias Mair, all rights reserved.
 
 ## Contributing
