@@ -4,20 +4,26 @@
 import json
 import logging
 
-import requests
 from django.conf.urls import url
+
 # from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+
+import requests
+
 from InvenTree.config import get_plugin_file
 from plugin import InvenTreePlugin, registry
 from plugin.mixins import EventMixin, SettingsMixin, UrlsMixin
 
-logger = logging.getLogger('inventree')
+logger = logging.getLogger("inventree")
 
-LICENSE_ACCOUNT = 'd61ba105-f3f1-40ac-8bd8-55d741bebf21'
-DEFAULT_HEADERS = {"Content-Type": "application/vnd.api+json", "Accept": "application/vnd.api+json"}
+LICENSE_ACCOUNT = "d61ba105-f3f1-40ac-8bd8-55d741bebf21"
+DEFAULT_HEADERS = {
+    "Content-Type": "application/vnd.api+json",
+    "Accept": "application/vnd.api+json",
+}
 
 
 def superuser_check(user):
@@ -36,26 +42,31 @@ def set_license_setting(setting):
 
 def check_license_online(key, set_fnc):
     """Check a licensing key online."""
-    logger.info(f'Checking license key {key}')
-    resp = requests.post(f'https://api.keygen.sh/v1/accounts/{LICENSE_ACCOUNT}/licenses/actions/validate-key', json={"meta": {"key": key}}, headers=DEFAULT_HEADERS)
+    logger.info(f"Checking license key {key}")
+    resp = requests.post(
+        f"https://api.keygen.sh/v1/accounts/{LICENSE_ACCOUNT}/licenses/actions/validate-key",
+        json={"meta": {"key": key}},
+        headers=DEFAULT_HEADERS,
+        timeout=5,
+    )
     resp_data = resp.json()
-    if (resp.status_code == 200 and resp_data['meta']['valid'] is True):
+    if resp.status_code == 200 and resp_data["meta"]["valid"] is True:
         logger.info(f"Licensing key {key} is valid")
         # Save the license key data
-        set_fnc('inventree-core:license_valid', True)
-        set_fnc('inventree-core:license_data', json.dumps(resp_data))
+        set_fnc("inventree-core:license_valid", True)
+        set_fnc("inventree-core:license_data", json.dumps(resp_data))
     else:
         logger.error(f"Licensing key {key} is invalid")
-        set_fnc('inventree-core:license_valid', False)
-        set_fnc('inventree-core:license_data', None)
+        set_fnc("inventree-core:license_valid", False)
+        set_fnc("inventree-core:license_data", None)
 
 
 def core_is_active():
     """Return if the core is active."""
-    plg = registry.get_plugin('invenhost-core')
+    plg = registry.get_plugin("invenhost-core")
     if plg is None:
         return False
-    if plg.get_setting('ACTIVE'):
+    if plg.get_setting("ACTIVE"):
         return plg.license_key_valid()
     return True
 
@@ -63,45 +74,49 @@ def core_is_active():
 def ready():
     """Return if the core is ready."""
     return core_is_active()
+
+
 # endregion
 
 
 class InvenHostCore(EventMixin, UrlsMixin, SettingsMixin, InvenTreePlugin):
     """InvenHost integration plugin."""
 
-    NAME = 'InvenHostCore'
-    SLUG = 'invenhost-core'
+    NAME = "InvenHostCore"
+    SLUG = "invenhost-core"
     TITLE = "InvenHost Core"
-    MIN_VERSION = '0.12.0'
+    MIN_VERSION = "0.12.0"
 
     SETTINGS = {
-        'ACTIVE': {
-            'name': _('Activate core'),
-            'description': _('Activate the core integration - this is required for all other plugins'),
-            'validator': bool,
-            'default': False,
+        "ACTIVE": {
+            "name": _("Activate core"),
+            "description": _(
+                "Activate the core integration - this is required for all other plugins"
+            ),
+            "validator": bool,
+            "default": False,
         },
-        'LICENSE': {
-            'name': _('License'),
-            'description': _('License key for InvenHost'),
-            'after_save': set_license_setting,
+        "LICENSE": {
+            "name": _("License"),
+            "description": _("License key for InvenHost"),
+            "after_save": set_license_setting,
         },
     }
 
     def process_event(self, event, *args, **kwargs):
         """Process received events."""
-        if event == 'plugins_loaded':
-            key = self.get_setting('LICENSE')
+        if event == "plugins_loaded":
+            key = self.get_setting("LICENSE")
             check_license_online(key, self.db.set_metadata)
             self.check_pugins_file(key)
 
     def license_key_valid(self):
         """Return if the license key is valid."""
-        return self.db.get_metadata('inventree-core:license_valid', False)
+        return self.db.get_metadata("inventree-core:license_valid", False)
 
     def license_key_data(self):
         """Return the license key data."""
-        data = self.db.get_metadata('inventree-core:license_data', None)
+        data = self.db.get_metadata("inventree-core:license_data", None)
         if data is not None and data != {}:
             return json.loads(data)
         return None
@@ -109,22 +124,22 @@ class InvenHostCore(EventMixin, UrlsMixin, SettingsMixin, InvenTreePlugin):
     def check_pugins_file(self, key):
         """Check if the source is set correctly in the plugin file."""
         if ready():
-            logger.info(('License file check started'))
+            logger.info(("License file check started"))
             # Create license file
-            lic_url = f'https://license:{key}@get.keygen.sh/mjmair-com/stable/'
+            lic_url = f"https://license:{key}@get.keygen.sh/mjmair-com/stable/"
             source = get_plugin_file()
             plugin_text = source.read_text()
             if lic_url not in plugin_text:
-                plugin_text += f'\n--extra-index-url {lic_url}\n'
+                plugin_text += f"\n--extra-index-url {lic_url}\n"
                 source.write_text(plugin_text)
-                logger.info(('License file appended'))
-            logger.info(('License file check done'))
+                logger.info(("License file appended"))
+            logger.info(("License file check done"))
 
     def view_check(self, request, pk=None, led=None, context=None):
         """Register an LED."""
         if not superuser_check(request.user):
             raise PermissionError("Only superusers can register an instance.")
-        key = self.get_setting('LICENSE')
+        key = self.get_setting("LICENSE")
         check_license_online(key, self.db.set_metadata)
         self.check_pugins_file(key)
         return redirect(self.settings_url)
@@ -132,7 +147,7 @@ class InvenHostCore(EventMixin, UrlsMixin, SettingsMixin, InvenTreePlugin):
     def setup_urls(self):
         """Return the URLs defined by this plugin."""
         return [
-            url(r'check/', self.view_check, name='check'),
+            url(r"check/", self.view_check, name="check"),
         ]
 
     def get_settings_content(self, request):
@@ -140,11 +155,15 @@ class InvenHostCore(EventMixin, UrlsMixin, SettingsMixin, InvenTreePlugin):
         valid = self.license_key_valid()
         data = self.license_key_data()
 
-        key = data['data']['attributes']['key'] if (valid and data) else 'None'
-        expires = data['data']['attributes']['expiry'] if (valid and data) else 'None'
-        seats = data['data']['attributes']['maxMachines'] if (valid and data) else 'None'
-        activations = data['data']['attributes']['uses'] if (valid and data) else 'None'
-        last_check = data['data']['attributes']['lastValidated'] if (valid and data) else 'None'
+        key = data["data"]["attributes"]["key"] if (valid and data) else "None"
+        expires = data["data"]["attributes"]["expiry"] if (valid and data) else "None"
+        seats = (
+            data["data"]["attributes"]["maxMachines"] if (valid and data) else "None"
+        )
+        activations = data["data"]["attributes"]["uses"] if (valid and data) else "None"
+        last_check = (
+            data["data"]["attributes"]["lastValidated"] if (valid and data) else "None"
+        )
         return f"""
         <h3>InvenTree core</h3>
         <p>Activate the core integration - this is required for all other plugins.</p>

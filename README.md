@@ -1,7 +1,7 @@
 # invenhost-core
 
 InvenHost core integration plugin.
-This plugin is required as a dependency for all other InvenHost plugins. It provides licensing and metrics functionality reuqired to fully use InvenHost plugins.
+This plugin is required as a dependency for all other InvenHost plugins. It provides licensing and metrics functionality required to fully use InvenHost plugins.
 
 ## Setup
 
